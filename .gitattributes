@@ -1,0 +1,3 @@
+# MPLAB files that use Unix EOL
+Makefile text eol=lf
+
