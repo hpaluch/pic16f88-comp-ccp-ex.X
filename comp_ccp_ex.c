@@ -5,17 +5,15 @@
  *    MCU: PIC1688 PDIP
  * SW: MPLAB X IDE v5.45, XC8 v2.32, DFP 1.2.33
  * 
- * Current function - milestone 1:
- * - Blinking LED on RA3 PIN2
+ * Current function - milestone 2:
+ * - 3 Short LED flashes on RA3 PIN2 using TMR0 IRQ
+ * - one flash is 64ms ( maximum TMR0 perios : 256 * 256 / 1_000_000 = 0.065 s
  * - 1 MHz f_cy (CLK/4) out on RA6/OSC2/CLK0 PIN 15
  * 
  * Circuit:
- *                       LED   470R
- *                   /---|<|--|==|-- +5V
- * RA3 PIN2 ---------+   LED   470R
- *                   \---|>|--|==|-- GND
- * 
- * NOTE: Measured LED blinking frequency is:  5.0106 Hz (very good!)
+ *                       
+ *                LED   470R
+ * RA3 PIN2 ------|<|--|==|-- +5V
  * 
  * RA6 PIN15 -- f_osc/4 = 1 MHz ---> to scope/f_meter
  * 
@@ -31,7 +29,7 @@
 // CONFIG1
 #pragma config FOSC = INTOSCCLK // Oscillator Selection bits (INTRC oscillator; CLKO function on RA6/OSC2/CLKO pin and port I/O function on RA7/OSC1/CLKI pin)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled)
-#ifdef __DEBUG
+#ifndef __DEBUG
 #pragma config PWRTE = ON       // Power-up Timer Enable bit (PWRT disabled fo debug)
 #else
 #pragma config PWRTE = ON       // Power-up Timer Enable bit (PWRT enabled)
@@ -59,7 +57,33 @@
 #endif
 
 // use "LATch" variable to avoid read-modify-write problems etc.
-unsigned char vLATA = ~0;
+volatile unsigned char vLATA = ~0;
+
+
+void flash_LED(void)
+{
+    // flash LED will set LED on, reset TMR0 and enable TMR0
+    // later TMR0_ISR will set LED off and disable TMR0
+    TMR0 = 0;NOP();NOP();NOP();TMR0=0;
+    // use negative logic
+    vLATA = vLATA & ~iLED_MASK;
+    PORTA = vLATA;
+}
+
+// mostly copy and paste from 
+// https://microchipdeveloper.com/projects:mcu1101-project-6
+// NOTE: PIC16F88 has single interrupt handler, so we must
+//       find who cause interrupt...
+void __interrupt() INTERRUPT_InterruptManager (void)
+{
+    if (INTCONbits.TMR0IF){
+        // turn off LED (negative logic)
+        vLATA = vLATA | iLED_MASK;
+        PORTA = vLATA;
+        INTCONbits.TMR0IF = 0; // must ACK interrupt
+    }
+    // later we will use also Comparator interrupt etc...
+}
 
 void main(void) {
 
@@ -76,10 +100,29 @@ void main(void) {
     vLATA ^= iLED_MASK;
     PORTA = vLATA; // toggle LEDs to signal that OSC is stable and running
 
+    // setup TMR0
+    CLRWDT();
+    // nRBPU_MASK =1 - pull-ups disabled, 
+    // T0CS = 0 - use instruction clock, PSA = 0, prescaler to TMR0
+    // PS_MASK = 7 - prescaler 1:256 (max))
+    OPTION_REG = _OPTION_REG_nRBPU_MASK | _OPTION_REG_PS_MASK;
+    TMR0 = 0;
+    // Clear Interrupt flag before enabling the interrupt
+    INTCONbits.TMR0IF = 0;
+    // Enabling TMR0 interrupt.
+    INTCONbits.TMR0IE = 1;
+    // globally enable interrupts
+    INTCONbits.GIE = 1;
+    
     while(1){
-        __delay_ms(100);
-        vLATA ^= iLED_MASK;
-        PORTA = vLATA; // toggle LEDs to signal that OSC is stable and running
+        unsigned char i;
+        // 3 quick flashes
+        for(i=0;i<3;i++){
+            flash_LED();
+            __delay_ms(300);            
+        }
+        // followed by longer pause
+        __delay_ms(2000);
     }
     return;
 }
