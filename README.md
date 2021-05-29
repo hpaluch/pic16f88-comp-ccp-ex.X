@@ -16,6 +16,10 @@ Because of complexity to projects is done in stages (called milestones).
 
 You can see results in [milestones/m1-led-and-clock-1MHz](milestones/m1-led-and-clock-1MHz)
 
+NOTE: To return back current project to this Milestone, just
+copy [milestones/m1-led-and-clock-1MHz/comp_ccp_ex.c][milestones/m1-led-and-clock-1MHz/comp_ccp_ex.c] to this main project directory (overwriting current
+version).
+
 
 # Requirements
 
