@@ -14,7 +14,7 @@ Because of complexity to projects is done in stages (called milestones).
 * 1 MHz f_cy (CLK/4) out on RA6/OSC2/CLK0 PIN 15, to verify
   that internal oscillator is properly calibrated
 
-You can see results in [milestones/m1-led-and-clock-1MHz][milestones/m1-led-and-clock-1MHz]
+You can see results in [milestones/m1-led-and-clock-1MHz](milestones/m1-led-and-clock-1MHz)
 
 
 # Requirements
