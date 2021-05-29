@@ -6,8 +6,16 @@
  * SW: MPLAB X IDE v5.45, XC8 v2.32, DFP 1.2.33
  * 
  * Current function - milestone 1:
- * - Blinking LED on RA3 PIN1
+ * - Blinking LED on RA3 PIN2
  * - 4 MHz clock out on RA6/OSC2/CLK0 PIN 15
+ * 
+ * Circuit:
+ *                       LED   470R
+ *                   /---|<|--|==|-- +5V
+ * RA3 PIN2 ---------+   LED   470R
+ *                   \---|>|--|==|-- GND
+ * 
+ * RA6 PIN15 -- f_osc ---> to scope/f_meter
  * 
  * Created on May 29, 2021, 11:35 AM
  */
