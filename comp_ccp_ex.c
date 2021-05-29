@@ -7,7 +7,7 @@
  * 
  * Current function - milestone 1:
  * - Blinking LED on RA3 PIN2
- * - 4 MHz clock out on RA6/OSC2/CLK0 PIN 15
+ * - 1 MHz f_cy (CLK/4) out on RA6/OSC2/CLK0 PIN 15
  * 
  * Circuit:
  *                       LED   470R
@@ -15,7 +15,7 @@
  * RA3 PIN2 ---------+   LED   470R
  *                   \---|>|--|==|-- GND
  * 
- * RA6 PIN15 -- f_osc ---> to scope/f_meter
+ * RA6 PIN15 -- f_osc/4 = 1 MHz ---> to scope/f_meter
  * 
  * Created on May 29, 2021, 11:35 AM
  */
