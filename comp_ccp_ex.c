@@ -1,7 +1,11 @@
 /*
  * File:   comp_ccp_ex.c - advanced demo - measuring non-wave frequency
  *                         using Comparator and CCP
- * Current function:
+ * DevKit: DM163045 - PICDEM Lab Development Kit
+ *    MCU: PIC1688 PDIP
+ * SW: MPLAB X IDE v5.45, XC8 v2.32, DFP 1.2.33
+ * 
+ * Current function - milestone 1:
  * - Blinking LED on RA3 PIN1
  * - 4 MHz clock out on RA6/OSC2/CLK0 PIN 15
  * 
@@ -52,7 +56,7 @@ void main(void) {
     TRISA = ~iLED_MASK;
     ANSEL = 0; // disable all analog inputs => enable digital I/OI/O
     while(1){
-        __delay_ms(200);
+        __delay_ms(100);
         PORTA = ~PORTA;
     }
     return;
