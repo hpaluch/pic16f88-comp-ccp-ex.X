@@ -15,6 +15,8 @@
  * RA3 PIN2 ---------+   LED   470R
  *                   \---|>|--|==|-- GND
  * 
+ * NOTE: Measured LED blinking frequency is:  5.0106 Hz (very good!)
+ * 
  * RA6 PIN15 -- f_osc/4 = 1 MHz ---> to scope/f_meter
  * 
  * Created on May 29, 2021, 11:35 AM
@@ -30,13 +32,13 @@
 #pragma config FOSC = INTOSCCLK // Oscillator Selection bits (INTRC oscillator; CLKO function on RA6/OSC2/CLKO pin and port I/O function on RA7/OSC1/CLKI pin)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled)
 #ifdef __DEBUG
-#pragma config PWRTE = OFF       // Power-up Timer Enable bit (PWRT disabled fo debug)
+#pragma config PWRTE = ON       // Power-up Timer Enable bit (PWRT disabled fo debug)
 #else
 #pragma config PWRTE = ON       // Power-up Timer Enable bit (PWRT enabled)
 #endif
 #pragma config MCLRE = ON       // RA5/MCLR/VPP Pin Function Select bit (RA5/MCLR/VPP pin function is MCLR)
 #pragma config BOREN = ON       // Brown-out Reset Enable bit (BOR enabled)
-#pragma config LVP = OFF        // Low-Voltage Programming Enable bit (RB3 is digital I/O, HV on MCLR must be used for programming)
+#pragma config LVP = ON        // Low-Voltage Programming Enable bit ON
 #pragma config CPD = OFF        // Data EE Memory Code Protection bit (Code protection off)
 #pragma config WRT = OFF        // Flash Program Memory Write Enable bits (Write protection off)
 #pragma config CCPMX = RB0      // CCP1 Pin Selection bit (CCP1 function on RB0)
@@ -55,17 +57,29 @@
 #else
 #warning Build in Production (Run) mode
 #endif
- 
+
+// use "LATch" variable to avoid read-modify-write problems etc.
+unsigned char vLATA = ~0;
 
 void main(void) {
 
+    // initialize PINs as soon as possible
+    PORTA = vLATA;
+    TRISA = ~iLED_MASK; // only our LED set as output
+    PORTA = vLATA; // ensure that values are really set
+    ANSEL = 0; // disable all analog inputs => enable digital I/O
+
     OSCCONbits.IRCF = 0b110;    // f = 4 MHz => 1 MHz instruction clock
-    PORTA = 0;
-    TRISA = ~iLED_MASK;
-    ANSEL = 0; // disable all analog inputs => enable digital I/OI/O
+    // wait until OSC is stable, otherwise we will screw up 1st
+    // call of __delay_ms() !!! it will be much slower then expected!!
+    while(OSCCONbits.IOFS == 0){/*nop*/};
+    vLATA ^= iLED_MASK;
+    PORTA = vLATA; // toggle LEDs to signal that OSC is stable and running
+
     while(1){
         __delay_ms(100);
-        PORTA = ~PORTA;
+        vLATA ^= iLED_MASK;
+        PORTA = vLATA; // toggle LEDs to signal that OSC is stable and running
     }
     return;
 }
