@@ -39,7 +39,8 @@ CVR	Cvref Formula, for Vss=5.08, CVRR=1
 
 Here are values measured using `Digilent Analog Discovery 2` scope:
 
-![Testing Cvref 16 values](https://raw.githubusercontent.com/hpaluch/pic16f88-comp-ccp-ex.X/milestones/m2-test-Cvref/cvref-tests-cvrr1-scope.png)
+![Testing Cvref 16 values](https://raw.githubusercontent.com/hpaluch/pic16f88-comp-ccp-ex.X/master/milestones/m2-test-Cvref/cvref-tests-cvrr1-scope.png
+)
 
 NOTE: Some details are as usual in [comp_ccp_ex.c](comp_ccp_ex.c) source code.
 
@@ -50,7 +51,10 @@ NOTE: Some details are as usual in [comp_ccp_ex.c](comp_ccp_ex.c) source code.
 * 1 MHz f_cy (CLK/4) out on RA6/OSC2/CLK0 PIN 15, to verify
   that internal oscillator is properly calibrated
 
-You can see results in [milestones/m1-led-and-clock-1MHz](milestones/m1-led-and-clock-1MHz)
+You can see results in [milestones/m1-led-and-clock-1MHz](milestones/m1-led-and-clock-1MHz) including scope for verification:
+
+![M1 verify clock and LED](https://raw.githubusercontent.com/hpaluch/pic16f88-comp-ccp-ex.X/master/milestones/m1-led-and-clock-1MHz/clkout-1mHz-scope.png)
+
 
 NOTE: To return back current project to this Milestone, just
 copy [milestones/m1-led-and-clock-1MHz/comp_ccp_ex.c](milestones/m1-led-and-clock-1MHz/comp_ccp_ex.c) to this main project directory (overwriting current
