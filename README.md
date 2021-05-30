@@ -7,18 +7,18 @@ module.
 
 Because of complexity to projects is done in stages (called milestones).
 
-## Milseton 2 (M2)
+## Milsetone 2 (M2)
 
 * Test Cvref (comparator Voltage reference values) and verify
   that they match Expected values
 
-We tested values for CVRR=1 where following formula is valid `=5.08*$A2/24`
+We tested values for `CVRR=1` where following formula is valid `=5.08*$A2/24`
 (for Vss = 5.08V, valid `$Ax` values are 0 to 15).
 
 Theoretical values from spreadsheet are here:
 
 ```
-CVR	Cvref Formula
+CVR	Cvref Formula, for Vss=5.08, CVRR=1
 0	0.000V =5.08*$A2/24
 1	0.212V ...
 2	0.423V
