@@ -3,17 +3,22 @@
  *                         using Comparator and CCP
  * DevKit: DM163045 - PICDEM Lab Development Kit
  *    MCU: PIC1688 PDIP
- * SW: MPLAB X IDE v5.45, XC8 v2.32, DFP 1.2.33
+ *     SW: MPLAB X IDE v5.45, XC8 v2.32, DFP 1.2.33
  * 
- * Current function - milestone 2:
- * - 3 Short LED flashes on RA3 PIN2 using TMR0 IRQ
- * - one flash is 64ms ( maximum TMR0 perios : 256 * 256 / 1_000_000 = 0.065 s
+ * Functions for this milestone 2:
+ * - test all Cvref (on-chip comparator reference)
+ *    values (for future Comparator use) - output on PIN1
+ * - use Flashing LED as trigger for scope - output on PIN18
  * - 1 MHz f_cy (CLK/4) out on RA6/OSC2/CLK0 PIN 15
- * 
+s * 
  * Circuit:
  *                       
  *                LED   470R
- * RA3 PIN2 ------|<|--|==|-- +5V
+ * RA1 PIN18 ------|>|--|==|-- GND (Vss)
+ *             |
+ *             \------ to scope channel 1, positive edge trigger
+
+ * CVref PIN1 -------- to scope channel 2, show CVref voltages
  * 
  * RA6 PIN15 -- f_osc/4 = 1 MHz ---> to scope/f_meter
  * 
@@ -47,7 +52,7 @@
 #pragma config IESO = OFF       // Internal External Switchover bit (Internal External Switchover mode disabled)
 
 // My I/O ports
-#define iLED_MASK  _PORTA_RA3_MASK
+#define fLED_MASK  _PORTA_RA1_MASK
 
 // show to user which mode is compiled
 #ifdef __DEBUG
@@ -56,17 +61,16 @@
 #warning Build in Production (Run) mode
 #endif
 
-// use "LATch" variable to avoid read-modify-write problems etc.
-volatile unsigned char vLATA = ~0;
+// start with Flash LED ON
+volatile unsigned char vLATA = fLED_MASK;
 
 
 void flash_LED(void)
 {
-    // flash LED will set LED on, reset TMR0 and enable TMR0
-    // later TMR0_ISR will set LED off and disable TMR0
+    // reset TMR0 and turn LED on
+    // 64ms later TMR0_ISR will set LED off
     TMR0 = 0;NOP();NOP();NOP();TMR0=0;
-    // use negative logic
-    vLATA = vLATA & ~iLED_MASK;
+    vLATA = vLATA | fLED_MASK;
     PORTA = vLATA;
 }
 
@@ -78,7 +82,7 @@ void __interrupt() INTERRUPT_InterruptManager (void)
 {
     if (INTCONbits.TMR0IF){
         // turn off LED (negative logic)
-        vLATA = vLATA | iLED_MASK;
+        vLATA = vLATA & ~fLED_MASK;
         PORTA = vLATA;
         INTCONbits.TMR0IF = 0; // must ACK interrupt
     }
@@ -89,16 +93,20 @@ void main(void) {
 
     // initialize PINs as soon as possible
     PORTA = vLATA;
-    TRISA = ~iLED_MASK; // only our LED set as output
+    TRISA = ~fLED_MASK; // only our LED set as output
     PORTA = vLATA; // ensure that values are really set
-    ANSEL = 0; // disable all analog inputs => enable digital I/O
-
+    
+    // enable I/O on RA1 (Flash LED), and Cvref on RA2
+    ANSEL = ~(_ANSEL_ANS1_MASK|_ANSEL_ANS2_MASK); 
+    // enable CVref on RA2
+    CVRCON = _CVRCON_CVREN_MASK | _CVRCON_CVROE_MASK | _CVRCON_CVRR_MASK;
+    
     OSCCONbits.IRCF = 0b110;    // f = 4 MHz => 1 MHz instruction clock
     // wait until OSC is stable, otherwise we will screw up 1st
     // call of __delay_ms() !!! it will be much slower then expected!!
     while(OSCCONbits.IOFS == 0){/*nop*/};
-    vLATA ^= iLED_MASK;
-    PORTA = vLATA; // toggle LEDs to signal that OSC is stable and running
+    vLATA &= ~fLED_MASK; // Flash LED now off
+    PORTA = vLATA;
 
     // setup TMR0
     CLRWDT();
@@ -116,13 +124,14 @@ void main(void) {
     
     while(1){
         unsigned char i;
-        // 3 quick flashes
-        for(i=0;i<3;i++){
-            flash_LED();
-            __delay_ms(300);            
+        CVRCONbits.CVR = 0; // set lowest voltage on CVref
+        flash_LED(); // also usable as scope trigger
+        for(i=0;i<=_CVRCON_CVR_MASK;i++){
+            CVRCONbits.CVR = i;
+            __delay_ms(1); // typical settle time of CVref is 10us
         }
         // followed by longer pause
-        __delay_ms(2000);
+        __delay_ms(100);
     }
     return;
 }
